@@ -124,9 +124,11 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 <div id="gate" class="gate">
   <div class="eyebrow">Appellation Hotels</div>
   <h1>Operations Reporting</h1>
-  <p>Confidential. Enter your work email and we will send a one-time sign-in link.</p>
+  <p>Confidential. Sign in with your password, or request a one-time email link.</p>
   <input id="email" type="email" placeholder="you@appellationhotels.com" autocomplete="email">
-  <button id="send">Send sign-in link</button>
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="pwbtn">Sign in</button>
+  <button class="ghost" id="send" style="margin-top:8px">Email me a sign-in link instead</button>
   <div id="gmsg" class="msg"></div>
 </div>
 
@@ -264,6 +266,18 @@ $("send").addEventListener("click", async () => {
   m.textContent = error ? error.message : "Check your inbox. The link opens this report.";
 });
 $("email").addEventListener("keydown", e => { if (e.key === "Enter") $("send").click(); });
+
+$("pwbtn").addEventListener("click", async () => {
+  const email = $("email").value.trim().toLowerCase();
+  const password = $("password").value;
+  const m = $("gmsg");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !password) { m.className = "msg err"; m.textContent = "Enter your email and password."; return; }
+  m.className = "msg"; m.textContent = "Signing in\u2026";
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) { m.className = "msg err"; m.textContent = error.message; }
+  /* success is handled by onAuthStateChange -> enter() */
+});
+$("password").addEventListener("keydown", e => { if (e.key === "Enter") $("pwbtn").click(); });
 $("signout").addEventListener("click", async () => { await db.auth.signOut(); location.reload(); });
 
 /* ---------- boot ---------- */
