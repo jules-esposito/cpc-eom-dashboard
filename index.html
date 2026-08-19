@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>EOM Operations Report | Appellation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#1E3328; --cream:#F5EFE4; --gold:#BF9850; --olive:#4A4A40;
+  --unfav:#9B2335; --fav:#2E6B4F;
+  --line:#DED5C4; --paper:#FFFFFF; --muted:#6E6A5F;
+  --serif:"EB Garamond",Georgia,serif;
+  --sans:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--forest);font:400 15px/1.55 var(--sans)}
+.shell{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+
+.mast{padding:34px 0 22px;border-bottom:2px solid var(--forest)}
+.eyebrow{font:600 10.5px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+h1{font:500 40px/1.06 var(--serif);margin:12px 0 6px;letter-spacing:-.01em}
+.mast .meta{font-size:13px;color:var(--muted)}
+.pickers{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
+select{font:400 14px var(--sans);padding:7px 30px 7px 11px;border:1px solid var(--line);
+  border-radius:3px;background:var(--paper) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='7'><path d='M0 0h10L5 7z' fill='%234A4A40'/></svg>") no-repeat right 10px center;
+  -webkit-appearance:none;appearance:none;color:var(--forest);cursor:pointer}
+select:focus{outline:2px solid var(--gold);outline-offset:-1px}
+.stamp{font-size:12px;color:var(--muted);margin-left:auto}
+
+nav.sub{position:sticky;top:0;z-index:40;background:var(--cream);border-bottom:1px solid var(--line);
+  margin:0 -24px;padding:0 24px}
+nav.sub ul{display:flex;gap:2px;list-style:none;margin:0;padding:0;overflow-x:auto;scrollbar-width:none}
+nav.sub ul::-webkit-scrollbar{display:none}
+nav.sub a{display:block;padding:13px 14px;font:600 11px/1 var(--sans);letter-spacing:.11em;
+  text-transform:uppercase;color:var(--olive);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+nav.sub a:hover{color:var(--forest)}
+nav.sub a.on{color:var(--forest);border-bottom-color:var(--gold)}
+
+section{padding-top:38px;scroll-margin-top:52px}
+h2{font:500 25px/1.15 var(--serif);margin:0 0 4px}
+.sectsub{font-size:13px;color:var(--muted);margin:0 0 16px}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:12px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:16px 17px}
+.tile .lab{font:600 10px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.tile .val{font:500 29px/1.1 var(--serif);margin:9px 0 2px;font-variant-numeric:tabular-nums}
+.tile .vs{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile .var{font:600 13px var(--sans);font-variant-numeric:tabular-nums}
+.fav{color:var(--fav)} .unfav{color:var(--unfav)}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font:600 10px/1 var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+  text-align:right;padding:11px 14px;background:#FBF8F2;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:9px 14px;border-bottom:1px solid #EFEAE0;text-align:right;font-size:14px}
+td:first-child{text-align:left}
+tr:last-child td{border-bottom:none}
+tr.sub td{background:#FBF8F2;font-weight:600}
+tr.sec td{background:var(--forest);color:var(--cream);font:600 10px/1 var(--sans);
+  letter-spacing:.15em;text-transform:uppercase;padding:8px 14px}
+.caveat{display:block;font-size:11.5px;line-height:1.4;color:var(--unfav);margin-top:3px;max-width:52ch}
+.src{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
+
+.split{display:grid;grid-template-columns:250px 1fr;gap:18px;align-items:start}
+.legend{list-style:none;margin:10px 0 0;padding:0;font-size:13px}
+.legend li{display:flex;align-items:center;gap:8px;padding:3px 0}
+.sw{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+.legend .n{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar-row{display:grid;grid-template-columns:150px 1fr 96px;gap:10px;align-items:center;padding:5px 0;font-size:13.5px}
+.track{height:9px;background:#EFEAE0;border-radius:5px;overflow:hidden}
+.fill{height:100%;background:var(--forest)}
+
+.rev{border-bottom:1px solid #EFEAE0;padding:13px 16px}
+.rev:last-child{border-bottom:none}
+.rev .top{display:flex;gap:9px;align-items:baseline;font-size:12.5px;color:var(--muted)}
+.rev .plat{font:600 10px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--forest)}
+.rev p{margin:6px 0 0;font-size:14px}
+.tag{font:600 9.5px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 7px;border-radius:2px;border:1px solid var(--line);color:var(--olive)}
+.tag.need{border-color:var(--unfav);color:var(--unfav)}
+.notes{margin:0;padding:4px 16px 16px 34px}
+.notes li{padding:6px 0;font-size:14.5px}
+
+.gate{max-width:430px;margin:14vh auto;background:var(--paper);border:1px solid var(--line);
+  border-radius:5px;padding:34px 32px;text-align:center}
+.gate h1{font-size:29px;margin:14px 0 8px}
+.gate p{font-size:13.5px;color:var(--muted);margin:0 0 20px}
+.gate input{width:100%;padding:11px 12px;font:400 15px var(--sans);border:1px solid var(--line);border-radius:3px;margin-bottom:10px}
+.gate input:focus{outline:2px solid var(--gold);outline-offset:-1px}
+button{font:600 12px var(--sans);letter-spacing:.09em;text-transform:uppercase;padding:11px 20px;
+  border:1px solid var(--forest);background:var(--forest);color:var(--cream);border-radius:3px;cursor:pointer}
+button:hover{background:#16261D}
+button.ghost{background:transparent;color:var(--olive);border-color:var(--line);letter-spacing:.06em}
+.msg{font-size:13px;margin-top:14px;min-height:19px}
+.msg.err{color:var(--unfav)}
+.empty{padding:22px;color:var(--muted);font-size:13.5px;text-align:center}
+.hide{display:none !important}
+.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+
+@media (max-width:820px){
+  .split{grid-template-columns:1fr}
+  h1{font-size:31px}
+  .bar-row{grid-template-columns:110px 1fr 82px}
+  th.opt,td.opt{display:none}
+}
+@media print{
+  nav.sub,.pickers,button,.foot{display:none !important}
+  body{background:#fff} .shell{max-width:none;padding:0}
+  section{page-break-inside:avoid;padding-top:22px}
+  .card,.tile{border-color:#bbb}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SIGN-IN GATE ============ -->
+<div id="gate" class="gate">
+  <div class="eyebrow">Appellation Hotels</div>
+  <h1>Operations Reporting</h1>
+  <p>Confidential. Enter your work email and we will send a one-time sign-in link.</p>
+  <input id="email" type="email" placeholder="you@appellationhotels.com" autocomplete="email">
+  <button id="send">Send sign-in link</button>
+  <div id="gmsg" class="msg"></div>
+</div>
+
+<!-- ============ REPORT ============ -->
+<div id="app" class="shell hide">
+
+  <div class="mast">
+    <div class="eyebrow">End of Month Operations Report</div>
+    <h1 id="title">&nbsp;</h1>
+    <div class="meta" id="submeta">&nbsp;</div>
+    <div class="pickers">
+      <select id="outlet"></select>
+      <select id="period"></select>
+      <button class="ghost" id="reload">Refresh</button>
+      <span class="stamp" id="stamp"></span>
+    </div>
+  </div>
+
+  <nav class="sub">
+    <ul>
+      <li><a href="#snapshot">Financial Snapshot</a></li>
+      <li><a href="#pnl">P&amp;L Overview</a></li>
+      <li><a href="#labor">Labor</a></li>
+      <li><a href="#reviews">Guest Reviews</a></li>
+      <li><a href="#mix">Product Mix</a></li>
+      <li><a href="#notes">Operator Notes</a></li>
+    </ul>
+  </nav>
+
+  <section id="snapshot">
+    <h2>Financial Snapshot</h2>
+    <p class="sectsub">Actual against budget. Favorable in green, unfavorable in red.</p>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="pnl">
+    <h2>P&amp;L Overview</h2>
+    <p class="sectsub">Department statement as booked by property accounting.</p>
+    <div class="split">
+      <div class="card" style="padding:16px">
+        <div class="eyebrow" style="color:var(--muted)">Sales Makeup</div>
+        <div id="donut"></div>
+        <ul class="legend" id="dlegend"></ul>
+      </div>
+      <div class="card"><table>
+        <thead><tr><th>Line</th><th>Actual</th><th>Budget</th><th>Variance</th><th class="opt">Prior Yr</th></tr></thead>
+        <tbody id="pnlrows"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section id="labor">
+    <h2>Labor</h2>
+    <p class="sectsub">Hours and cost by department, against budget.</p>
+    <div class="card"><table>
+      <thead><tr><th>Department</th><th class="opt">Hours</th><th>Cost</th><th>Budget</th><th>Variance</th><th>% Sales</th></tr></thead>
+      <tbody id="laborrows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="reviews">
+    <h2>Guest Reviews and Responses</h2>
+    <p class="sectsub">OpenTable, Google, and Yelp for the period, with reply status.</p>
+    <div class="card" id="revlist"></div>
+  </section>
+
+  <section id="mix">
+    <h2>Product Mix</h2>
+    <p class="sectsub">Top items by net sales.</p>
+    <div class="card" id="mixbody"></div>
+  </section>
+
+  <section id="notes">
+    <h2>Operator Notes</h2>
+    <p class="sectsub">Prepared by F&amp;B Operations.</p>
+    <div class="card" id="notelist"></div>
+  </section>
+
+  <div class="foot">
+    <span id="who"></span>
+    <span id="loadinfo"></span>
+    <button class="ghost" id="signout">Sign out</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ================= CONFIG ================= */
+const SUPABASE_URL = "https://vkxjggeuicfrmenqdskl.supabase.co";
+const SUPABASE_KEY = "sb_publishable_hNfH9nVJ2r60imC6MeMhOA_DaA1NtWk";
+/* Publishable key only. It reads nothing unless the signed-in email is
+   active in viewer_allowlist. Never put a service_role key in this file. */
+/* ========================================== */
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => n == null ? "—" : (n < 0 ? "-$" : "$") +
+  Math.abs(Number(n)).toLocaleString("en-US",{maximumFractionDigits:0});
+const num = n => n == null ? "—" : Number(n).toLocaleString("en-US",{maximumFractionDigits:1});
+const pct = n => n == null ? "—" : Number(n).toFixed(1) + "%";
+
+/* Expense sections invert: under budget is favorable. */
+const EXPENSE = new Set(["COGS","Labor","Other Expense"]);
+function favClass(section, actual, budget){
+  if (actual == null || budget == null) return "";
+  const d = Number(actual) - Number(budget);
+  if (Math.abs(d) < 0.005) return "";
+  const good = EXPENSE.has(section) ? d < 0 : d > 0;
+  return good ? "fav" : "unfav";
+}
+function varCell(section, actual, budget){
+  if (actual == null || budget == null) return '<td>—</td>';
+  const d = Number(actual) - Number(budget);
+  const p = Number(budget) ? (d / Math.abs(Number(budget))) * 100 : null;
+  const cls = favClass(section, actual, budget);
+  return `<td class="${cls}">${d >= 0 ? "+" : ""}${money(d)}` +
+         (p == null ? "" : ` <span class="src">${p >= 0 ? "+" : ""}${p.toFixed(1)}%</span>`) + `</td>`;
+}
+
+const DONUT = ["#1E3328","#BF9850","#4A4A40","#6E8C74","#C9B08A","#8A9A8F","#3F5A48"];
+let SESSION = null, OUTLETS = [], PERIODS = [];
+
+/* ---------- auth ---------- */
+$("send").addEventListener("click", async () => {
+  const email = $("email").value.trim().toLowerCase();
+  const m = $("gmsg");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { m.className = "msg err"; m.textContent = "Enter a valid email address."; return; }
+  m.className = "msg"; m.textContent = "Sending…";
+  const { error } = await db.auth.signInWithOtp({
+    email, options: { emailRedirectTo: window.location.href.split("#")[0] }
+  });
+  m.className = error ? "msg err" : "msg";
+  m.textContent = error ? error.message : "Check your inbox. The link opens this report.";
+});
+$("email").addEventListener("keydown", e => { if (e.key === "Enter") $("send").click(); });
+$("signout").addEventListener("click", async () => { await db.auth.signOut(); location.reload(); });
+
+/* ---------- boot ---------- */
+(async function boot(){
+  const { data:{ session } } = await db.auth.getSession();
+  db.auth.onAuthStateChange((_e, s) => { if (s && !SESSION) { SESSION = s; enter(); } });
+  if (session) { SESSION = session; enter(); }
+})();
+
+async function enter(){
+  $("gate").classList.add("hide");
+  $("app").classList.remove("hide");
+  $("who").textContent = "Signed in as " + (SESSION.user.email || "");
+
+  const [{ data: locs, error: e1 }, { data: pers }] = await Promise.all([
+    db.from("locations").select("*").eq("active", true).order("sort_order"),
+    db.from("periods").select("*").order("sort_order", { ascending: false })
+  ]);
+
+  if (e1 || !locs || !locs.length) {
+    $("app").innerHTML =
+      '<div class="gate"><div class="eyebrow">Access</div><h1>Not on the viewer list</h1>' +
+      '<p>Your account signed in successfully, but <strong>' + esc(SESSION.user.email) +
+      '</strong> is not an active viewer for this report. Ask Jules Esposito to add you.</p>' +
+      '<button class="ghost" id="so2">Sign out</button></div>';
+    $("so2").addEventListener("click", async () => { await db.auth.signOut(); location.reload(); });
+    return;
+  }
+
+  OUTLETS = locs; PERIODS = pers || [];
+  $("outlet").innerHTML = OUTLETS.map(o =>
+    `<option value="${esc(o.outlet_id)}">${esc(o.outlet_name)}${o.property ? " · " + esc(o.property) : ""}</option>`).join("");
+  $("period").innerHTML = PERIODS.map(p =>
+    `<option value="${esc(p.period_id)}">${esc(p.label)}${p.status !== "published" ? " (draft)" : ""}</option>`).join("");
+
+  $("outlet").addEventListener("change", load);
+  $("period").addEventListener("change", load);
+  $("reload").addEventListener("click", load);
+  load();
+}
+
+async function load(){
+  const oid = $("outlet").value, pid = $("period").value;
+  const o = OUTLETS.find(x => x.outlet_id === oid) || {};
+  const p = PERIODS.find(x => x.period_id === pid) || {};
+  $("title").textContent = (o.outlet_name || "") + " · " + (p.label || "");
+  $("submeta").textContent = [o.property, o.concept, o.pos_system ? o.pos_system + " POS" : null]
+    .filter(Boolean).join("  ·  ");
+  $("stamp").textContent = "Loading…";
+
+  const q = t => db.from(t).select("*").eq("outlet_id", oid).eq("period_id", pid);
+  const [pnl, labor, revs, mix, notes, lg] = await Promise.all([
+    q("pnl_lines").order("sort_order"),
+    q("labor_lines").order("sort_order"),
+    q("reviews").order("review_date", { ascending:false }),
+    q("product_mix").order("net_sales", { ascending:false }).limit(25),
+    q("operator_notes").order("sort_order"),
+    db.from("load_log").select("*").eq("outlet_id", oid).eq("period_id", pid)
+      .order("loaded_at", { ascending:false }).limit(1)
+  ]);
+
+  renderTiles(pnl.data || []);
+  renderPnl(pnl.data || []);
+  renderDonut(pnl.data || []);
+  renderLabor(labor.data || []);
+  renderReviews(revs.data || []);
+  renderMix(mix.data || [], o, p);
+  renderNotes(notes.data || []);
+
+  const L = (lg.data || [])[0];
+  $("loadinfo").textContent = L
+    ? "Data loaded " + new Date(L.loaded_at).toLocaleString() + (L.source_summary ? " · " + L.source_summary : "")
+    : "No load recorded for this period.";
+  $("stamp").textContent = "Viewed " + new Date().toLocaleTimeString();
+}
+
+/* ---------- renderers ---------- */
+function renderTiles(rows){
+  const want = ["Total Revenue","Food Revenue","Beverage Revenue","Total Labor","Department Profit"];
+  const pick = want.map(n => rows.find(r => r.line_item === n)).filter(Boolean);
+  const use = pick.length ? pick : rows.filter(r => r.is_subtotal).slice(0,5);
+  if (!use.length) { $("tiles").innerHTML = '<div class="empty">No P&amp;L loaded for this period yet.</div>'; return; }
+  $("tiles").innerHTML = use.map(r => {
+    const cls = favClass(r.section, r.actual, r.budget);
+    const d = (r.actual != null && r.budget != null) ? Number(r.actual) - Number(r.budget) : null;
+    const pp = (d != null && Number(r.budget)) ? (d / Math.abs(Number(r.budget))) * 100 : null;
+    return `<div class="tile">
+      <div class="lab">${esc(r.line_item)}</div>
+      <div class="val">${money(r.actual)}</div>
+      <div class="vs">Budget ${money(r.budget)}</div>
+      ${d == null ? "" : `<div class="var ${cls}">${d >= 0 ? "+" : ""}${money(d)}${pp == null ? "" : `  ${pp >= 0 ? "+" : ""}${pp.toFixed(1)}%`}</div>`}
+      ${r.caveat_note ? `<span class="caveat">${esc(r.caveat_note)}</span>` : ""}
+    </div>`;
+  }).join("");
+}
+
+function renderPnl(rows){
+  if (!rows.length) { $("pnlrows").innerHTML = '<tr><td colspan="5" class="empty">No P&amp;L loaded for this period yet.</td></tr>'; return; }
+  let out = "", sec = null;
+  for (const r of rows){
+    if (r.section !== sec){ sec = r.section; out += `<tr class="sec"><td colspan="5">${esc(sec)}</td></tr>`; }
+    out += `<tr class="${r.is_subtotal ? "sub" : ""}">
+      <td>${esc(r.line_item)}${r.source_tag ? ` <span class="src">${esc(r.source_tag)}</span>` : ""}
+        ${r.caveat_note ? `<span class="caveat">${esc(r.caveat_note)}</span>` : ""}</td>
+      <td>${money(r.actual)}</td><td>${money(r.budget)}</td>
+      ${varCell(r.section, r.actual, r.budget)}
+      <td class="opt">${money(r.prior_year)}</td></tr>`;
+  }
+  $("pnlrows").innerHTML = out;
+}
+
+function renderDonut(rows){
+  const rev = rows.filter(r => r.section === "Revenue" && !r.is_subtotal && Number(r.actual) > 0);
+  const total = rev.reduce((s,r) => s + Number(r.actual), 0);
+  if (!total){ $("donut").innerHTML = '<div class="empty">No revenue detail.</div>'; $("dlegend").innerHTML = ""; return; }
+  const R = 62, C = 2 * Math.PI * R;
+  let acc = 0, arcs = "";
+  rev.forEach((r,i) => {
+    const frac = Number(r.actual) / total;
+    arcs += `<circle r="${R}" cx="80" cy="80" fill="none" stroke="${DONUT[i % DONUT.length]}"
+      stroke-width="26" stroke-dasharray="${(frac*C).toFixed(2)} ${C.toFixed(2)}"
+      stroke-dashoffset="${(-acc*C).toFixed(2)}" transform="rotate(-90 80 80)"></circle>`;
+    acc += frac;
+  });
+  $("donut").innerHTML = `<svg viewBox="0 0 160 160" width="160" height="160" role="img"
+    aria-label="Revenue by category"><g>${arcs}</g>
+    <text x="80" y="76" text-anchor="middle" font-family="EB Garamond" font-size="19" fill="#1E3328">${money(total)}</text>
+    <text x="80" y="93" text-anchor="middle" font-family="Source Sans 3" font-size="8.5"
+      letter-spacing="1.4" fill="#6E6A5F">TOTAL REVENUE</text></svg>`;
+  $("dlegend").innerHTML = rev.map((r,i) => `<li>
+    <span class="sw" style="background:${DONUT[i % DONUT.length]}"></span>${esc(r.line_item)}
+    <span class="n">${(Number(r.actual)/total*100).toFixed(1)}%</span></li>`).join("");
+}
+
+function renderLabor(rows){
+  if (!rows.length){ $("laborrows").innerHTML = '<tr><td colspan="6" class="empty">No labor detail loaded for this period yet.</td></tr>'; return; }
+  $("laborrows").innerHTML = rows.map(r => `<tr>
+    <td>${esc(r.department)}${r.source_tag ? ` <span class="src">${esc(r.source_tag)}</span>` : ""}
+      ${r.caveat_note ? `<span class="caveat">${esc(r.caveat_note)}</span>` : ""}</td>
+    <td class="opt">${num(r.hours)}</td><td>${money(r.dollars)}</td><td>${money(r.budget_dollars)}</td>
+    ${varCell("Labor", r.dollars, r.budget_dollars)}
+    <td>${pct(r.pct_of_sales)}</td></tr>`).join("");
+}
+
+function renderReviews(rows){
+  if (!rows.length){ $("revlist").innerHTML = '<div class="empty">No reviews captured for this period.</div>'; return; }
+  $("revlist").innerHTML = rows.map(r => `<div class="rev">
+    <div class="top"><span class="plat">${esc(r.platform)}</span>
+      <span>${r.rating != null ? Number(r.rating).toFixed(1) + " / 5" : ""}</span>
+      <span>${esc(r.review_date || "")}</span>
+      <span>${esc(r.reviewer || "")}</span>
+      <span style="margin-left:auto"><span class="tag ${/need/i.test(r.reply_status || "") ? "need" : ""}">${esc(r.reply_status || "—")}</span></span></div>
+    ${r.excerpt ? `<p>${esc(r.excerpt)}</p>` : ""}
+    ${r.reply_body ? `<p style="color:var(--muted);font-size:13px"><em>Reply:</em> ${esc(r.reply_body)}</p>` : ""}
+  </div>`).join("");
+}
+
+function renderMix(rows, o, p){
+  if (!rows.length){
+    const pre = o.pos_live_date && p.month_end && o.pos_live_date > p.month_end;
+    $("mixbody").innerHTML = `<div class="empty">${pre
+      ? esc(o.outlet_name) + " went live on " + esc(o.pos_system || "POS") + " on " + esc(o.pos_live_date) +
+        ", after this period closed. Product mix, cover counts, average check, comps, and voids are not available for " + esc(p.label) + "."
+      : "No product mix loaded for this period yet."}</div>`;
+    return;
+  }
+  const max = Math.max(...rows.map(r => Number(r.net_sales) || 0)) || 1;
+  $("mixbody").innerHTML = '<div style="padding:14px 16px">' + rows.map(r => `<div class="bar-row">
+    <div>${esc(r.item_name)}</div>
+    <div class="track"><div class="fill" style="width:${(Number(r.net_sales)/max*100).toFixed(1)}%"></div></div>
+    <div style="text-align:right">${money(r.net_sales)}<span class="src"> ×${esc(r.qty ?? "")}</span></div>
+  </div>`).join("") + '</div>';
+}
+
+function renderNotes(rows){
+  $("notelist").innerHTML = rows.length
+    ? '<ul class="notes">' + rows.map(r => `<li>${esc(r.note_body)}${r.author ? ` <span class="src">— ${esc(r.author)}</span>` : ""}</li>`).join("") + '</ul>'
+    : '<div class="empty">No operator notes for this period.</div>';
+}
+
+/* sticky subnav active state */
+const links = [...document.querySelectorAll("nav.sub a")];
+const obs = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) {
+    links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+  }});
+}, { rootMargin: "-52px 0px -70% 0px" });
+document.querySelectorAll("section").forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
