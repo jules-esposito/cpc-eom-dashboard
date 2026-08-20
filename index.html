@@ -490,8 +490,8 @@ function renderMix(rows, o, p){
   cats.forEach(cat => {
     const inCat = rows.filter(r => (r.category || "") === cat);
     if (!inCat.length) return;
-    const top = inCat.filter(r => Number(r.rank_in_cat) < 900).sort((a,b)=>Number(b.net_sales)-Number(a.net_sales));
-    const low = inCat.filter(r => Number(r.rank_in_cat) >= 900).sort((a,b)=>Number(b.net_sales)-Number(a.net_sales));
+    const top = inCat.filter(r => Number(r.rank_in_cat) < 900).sort((a,b)=>Number(b.net_sales)-Number(a.net_sales)).slice(0,5);
+    const low = inCat.filter(r => Number(r.rank_in_cat) >= 900).sort((a,b)=>Number(b.net_sales)-Number(a.net_sales)).slice(-5);
     html += `<div class="mixcat"><div class="mixcat-h">${esc(cat)}</div>`;
     if (top.length) html += `<div class="mixsub">Top sellers</div>` + mixBars(top);
     if (low.length) html += `<div class="mixsub low">Lowest sellers</div>` + mixBars(low);
