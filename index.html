@@ -331,6 +331,8 @@ async function enter(){
   $("outlet").addEventListener("change", load);
   $("period").addEventListener("change", load);
   $("reload").addEventListener("click", load);
+  // Open on the most recent period by default (dropdown list stays chronological).
+  if (PERIODS.length) $("period").value = PERIODS[PERIODS.length - 1].period_id;
   load();
 }
 
