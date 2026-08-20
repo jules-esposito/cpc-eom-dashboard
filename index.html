@@ -304,7 +304,7 @@ async function enter(){
 
   const [{ data: locs, error: e1 }, { data: pers }] = await Promise.all([
     db.from("locations").select("*").eq("active", true).order("sort_order"),
-    db.from("periods").select("*").order("sort_order", { ascending: false })
+    db.from("periods").select("*").order("sort_order", { ascending: true })
   ]);
 
   if (e1 || !locs || !locs.length) {
