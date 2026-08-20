@@ -75,6 +75,10 @@ tr.sec td{background:var(--forest);color:var(--cream);font:600 10px/1 var(--sans
 .bar-row{display:grid;grid-template-columns:150px 1fr 96px;gap:10px;align-items:center;padding:5px 0;font-size:13.5px}
 .track{height:9px;background:#EFEAE0;border-radius:5px;overflow:hidden}
 .fill{height:100%;background:var(--forest)}
+.mixcat{border-top:1px solid var(--line)} .mixcat:first-child{border-top:none}
+.mixcat-h{font:600 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--forest);background:#FBF8F2;padding:10px 16px;border-bottom:1px solid var(--line)}
+.mixsub{font:600 10px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding:11px 16px 0}
+.mixsub.low{color:var(--unfav)}
 
 .rev{border-bottom:1px solid #EFEAE0;padding:13px 16px}
 .rev:last-child{border-bottom:none}
@@ -338,7 +342,7 @@ async function load(){
     q("pnl_lines").order("sort_order"),
     q("labor_lines").order("sort_order"),
     q("reviews").order("review_date", { ascending:false }),
-    q("product_mix").order("net_sales", { ascending:false }).limit(25),
+    q("product_mix").order("category").order("rank_in_cat").limit(400),
     q("operator_notes").order("sort_order"),
     db.from("load_log").select("*").eq("outlet_id", oid).eq("period_id", pid)
       .order("loaded_at", { ascending:false }).limit(1)
@@ -440,21 +444,38 @@ function renderReviews(rows){
   </div>`).join("");
 }
 
+function mixBars(list){
+  const max = Math.max(...list.map(r => Number(r.net_sales) || 0)) || 1;
+  return '<div style="padding:4px 16px 12px">' + list.map(r => `<div class="bar-row">
+    <div>${esc(r.item_name)}</div>
+    <div class="track"><div class="fill" style="width:${(Number(r.net_sales)/max*100).toFixed(1)}%"></div></div>
+    <div style="text-align:right">${money(r.net_sales)}<span class="src"> ×${esc(r.qty ?? "")}</span></div>
+  </div>`).join("") + '</div>';
+}
 function renderMix(rows, o, p){
   if (!rows.length){
     const pre = o.pos_live_date && p.month_end && o.pos_live_date > p.month_end;
     $("mixbody").innerHTML = `<div class="empty">${pre
       ? esc(o.outlet_name) + " went live on " + esc(o.pos_system || "POS") + " on " + esc(o.pos_live_date) +
-        ", after this period closed. Product mix, cover counts, average check, comps, and voids are not available for " + esc(p.label) + "."
+        ", after this period closed. Product mix is not available for " + esc(p.label) + "."
       : "No product mix loaded for this period yet."}</div>`;
     return;
   }
-  const max = Math.max(...rows.map(r => Number(r.net_sales) || 0)) || 1;
-  $("mixbody").innerHTML = '<div style="padding:14px 16px">' + rows.map(r => `<div class="bar-row">
-    <div>${esc(r.item_name)}</div>
-    <div class="track"><div class="fill" style="width:${(Number(r.net_sales)/max*100).toFixed(1)}%"></div></div>
-    <div style="text-align:right">${money(r.net_sales)}<span class="src"> ×${esc(r.qty ?? "")}</span></div>
-  </div>`).join("") + '</div>';
+  const cats = ["Food", "Beverage"];
+  let html = "";
+  cats.forEach(cat => {
+    const inCat = rows.filter(r => (r.category || "") === cat);
+    if (!inCat.length) return;
+    const top = inCat.filter(r => Number(r.rank_in_cat) < 900).sort((a,b)=>Number(b.net_sales)-Number(a.net_sales));
+    const low = inCat.filter(r => Number(r.rank_in_cat) >= 900).sort((a,b)=>Number(b.net_sales)-Number(a.net_sales));
+    html += `<div class="mixcat"><div class="mixcat-h">${esc(cat)}</div>`;
+    if (top.length) html += `<div class="mixsub">Top sellers</div>` + mixBars(top);
+    if (low.length) html += `<div class="mixsub low">Lowest sellers</div>` + mixBars(low);
+    html += `</div>`;
+  });
+  const uncat = rows.filter(r => !cats.includes(r.category || ""));
+  if (uncat.length) html += `<div class="mixcat"><div class="mixcat-h">Other</div>` + mixBars(uncat.slice().sort((a,b)=>Number(b.net_sales)-Number(a.net_sales))) + `</div>`;
+  $("mixbody").innerHTML = html || '<div class="empty">No product mix loaded for this period yet.</div>';
 }
 
 function renderNotes(rows){
