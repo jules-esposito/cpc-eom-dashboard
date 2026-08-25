@@ -469,7 +469,9 @@ async function load(){
   renderPnl(pnl.data || []);
   renderDonut(pnl.data || []);
   renderLabor(labor.data || []);
-  renderReviews(revs.data || []);
+  const _lg0 = (lg.data || [])[0];
+  const reviewsTotal = _lg0 && _lg0.row_counts && _lg0.row_counts.reviews_total;
+  renderReviews(revs.data || [], reviewsTotal);
   renderMix(mix.data || [], o, p);
   renderNotes(notes.data || []);
 
@@ -548,11 +550,12 @@ function renderLabor(rows){
     <td>${pct(r.pct_of_sales)}</td></tr>`).join("");
 }
 
-function renderReviews(rows){
+function renderReviews(rows, totalOverride){
   if (!rows.length){ $("revlist").innerHTML = '<div class="empty">No reviews captured for this period.</div>'; return; }
-  const total = rows.length;
-  const needs = rows.filter(r => /need/i.test(r.reply_status || "")).length;
-  const responded = total - needs;
+  const total = totalOverride || rows.length;
+  const sampled = totalOverride && totalOverride > rows.length;
+  const answered = rows.filter(r => !/need/i.test(r.reply_status || "")).length;
+  const responded = answered;
   const rated = rows.filter(r => r.rating != null).map(r => Number(r.rating));
   const avg = rated.length ? (rated.reduce((s,v)=>s+v,0)/rated.length) : null;
   const plats = {};
@@ -576,7 +579,7 @@ function renderReviews(rows){
       <span style="margin-left:auto"><span class="tag ${/need/i.test(r.reply_status || "") ? "need" : ""}">${esc(r.reply_status || "—")}</span></span></div>
     ${r.excerpt ? `<p>${esc(r.excerpt)}</p>` : ""}
   </div>`).join("");
-  $("revlist").innerHTML = summary + `<div class="revsub">Top ${top.length} highlight${top.length>1?"s":""}</div>` + cards;
+  $("revlist").innerHTML = summary + `<div class="revsub">${sampled ? "Highlights" : "Top " + top.length + " highlight" + (top.length>1?"s":"")}</div>` + cards;
 }
 
 function mixBars(list){
