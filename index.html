@@ -118,6 +118,8 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 .hubhead{padding:40px 0 24px;border-bottom:2px solid var(--forest);margin-bottom:26px}
 .hubhead h1{margin:12px 0 4px}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.hubgroup{margin-bottom:30px}
+.hubgroup-h{font:600 11px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .pcard{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
 .pcard.soon{opacity:.5}
 .pcard-h{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
@@ -168,7 +170,7 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
     <h1>Properties</h1>
     <div class="meta" id="hubmeta">&nbsp;</div>
   </div>
-  <div class="hubgrid" id="hubgrid"></div>
+  <div id="hubbody"></div>
   <div class="foot">
     <span id="hubwho"></span>
     <button class="ghost" id="hubsignout">Sign out</button>
@@ -296,7 +298,13 @@ function varCell(section, actual, budget){
 
 const DONUT = ["#1E3328","#BF9850","#4A4A40","#6E8C74","#C9B08A","#8A9A8F","#3F5A48"];
 let SESSION = null, OUTLETS = [], PERIODS = [];
-const COMING_SOON = ["Appellation Healdsburg","Appellation Lodi","The MOHI","AMEYALLI Park City"];
+const HUB_PROPERTIES = [
+  { name: "Paso Robles Inn",        group: "Charlie Palmer Collective" },
+  { name: "AperiBar",               group: "Charlie Palmer Collective" },
+  { name: "Healdsburg Bar & Grill", group: "Charlie Palmer Collective" },
+  { name: "Appellation Lodi",       group: "Appellation" },
+  { name: "Appellation Healdsburg", group: "Appellation" },
+];
 
 /* ---------- auth ---------- */
 $("send").addEventListener("click", async () => {
@@ -389,24 +397,31 @@ function showHub(push){
 function renderHub(){
   const byProp = {};
   OUTLETS.forEach(o => { const p = o.property || "Other"; (byProp[p] = byProp[p] || []).push(o); });
-  const liveProps = Object.keys(byProp).sort();
-  $("hubmeta").textContent = liveProps.length + " live " + (liveProps.length === 1 ? "property" : "properties") +
-    (PERIODS.length ? "  ·  through " + PERIODS[PERIODS.length - 1].label : "");
+  const liveCount = HUB_PROPERTIES.filter(hp => (byProp[hp.name] || []).length).length;
+  $("hubmeta").textContent = liveCount + " live \u00b7 " + HUB_PROPERTIES.length + " properties" +
+    (PERIODS.length ? "  \u00b7  through " + PERIODS[PERIODS.length - 1].label : "");
+  const groups = [];
+  HUB_PROPERTIES.forEach(h => { if (!groups.includes(h.group)) groups.push(h.group); });
   let html = "";
-  liveProps.forEach(prop => {
-    const outs = byProp[prop].slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-    html += `<div class="pcard"><div class="pcard-h"><div class="pname">${esc(prop)}</div>` +
-      `<div class="pmeta">${outs.length} outlet${outs.length > 1 ? "s" : ""}</div></div>` +
-      outs.map(o => `<button class="orow" data-prop="${esc(prop)}" data-outlet="${esc(o.outlet_id)}">` +
-        `<span><span class="oname">${esc(o.outlet_name)}</span>${o.concept ? `<span class="osub"> · ${esc(o.concept)}</span>` : ""}</span>` +
-        `<span class="arrow">&rarr;</span></button>`).join("") + `</div>`;
+  groups.forEach(g => {
+    html += `<div class="hubgroup"><div class="hubgroup-h">${esc(g)}</div><div class="hubgrid">`;
+    HUB_PROPERTIES.filter(h => h.group === g).forEach(hp => {
+      const outs = (byProp[hp.name] || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+      if (outs.length){
+        html += `<div class="pcard"><div class="pcard-h"><div class="pname">${esc(hp.name)}</div>` +
+          `<div class="pmeta">${outs.length} outlet${outs.length > 1 ? "s" : ""}</div></div>` +
+          outs.map(o => `<button class="orow" data-prop="${esc(hp.name)}" data-outlet="${esc(o.outlet_id)}">` +
+            `<span><span class="oname">${esc(o.outlet_name)}</span>${o.concept ? `<span class="osub"> \u00b7 ${esc(o.concept)}</span>` : ""}</span>` +
+            `<span class="arrow">&rarr;</span></button>`).join("") + `</div>`;
+      } else {
+        html += `<div class="pcard soon"><div class="pcard-h"><div class="pname">${esc(hp.name)}</div>` +
+          `<div class="pmeta">${esc(g)}</div></div><div class="soonlab">Coming soon</div></div>`;
+      }
+    });
+    html += `</div></div>`;
   });
-  COMING_SOON.filter(n => !liveProps.includes(n)).forEach(n => {
-    html += `<div class="pcard soon"><div class="pcard-h"><div class="pname">${esc(n)}</div>` +
-      `<div class="pmeta">Charlie Palmer Collective</div></div><div class="soonlab">Coming soon</div></div>`;
-  });
-  $("hubgrid").innerHTML = html;
-  $("hubgrid").querySelectorAll(".orow").forEach(b =>
+  $("hubbody").innerHTML = html;
+  $("hubbody").querySelectorAll(".orow").forEach(b =>
     b.addEventListener("click", () => openProperty(b.dataset.prop, b.dataset.outlet, true)));
 }
 
