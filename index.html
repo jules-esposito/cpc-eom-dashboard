@@ -281,7 +281,7 @@ const num = n => n == null ? "—" : Number(n).toLocaleString("en-US",{maximumFr
 const pct = n => n == null ? "—" : Number(n).toFixed(1) + "%";
 
 /* Expense sections invert: under budget is favorable. */
-const EXPENSE = new Set(["COGS","Labor","Other Expense"]);
+const EXPENSE = new Set(["COGS","Labor","Other Expense","Undistributed"]);
 function favClass(section, actual, budget){
   if (actual == null || budget == null) return "";
   const d = Number(actual) - Number(budget);
