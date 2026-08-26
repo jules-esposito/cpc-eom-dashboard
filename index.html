@@ -120,6 +120,19 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .hubgroup{margin-bottom:30px}
 .hubgroup-h{font:600 11px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.cpclogo{height:34px;width:auto;display:block;margin:0 0 12px}
+.hubtitle{font:500 24px/1.1 var(--serif);color:var(--forest);margin:0 0 4px;letter-spacing:0}
+.plist{}
+.prow{display:flex;align-items:baseline;gap:14px;padding:8px 2px;border-top:1px solid #EFEAE0;font-size:13.5px}
+.prow:first-child{border-top:none}
+.prow .pn{font:600 14px var(--sans);color:var(--forest);flex:0 0 210px}
+.prow.soon .pn{color:var(--muted);font-weight:500}
+.prow .po{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.olink{font:600 13.5px var(--sans);background:none;border:none;padding:0;color:var(--gold);cursor:pointer;letter-spacing:0;text-transform:none}
+.olink:hover{color:var(--forest);text-decoration:underline;background:none}
+.osoon{color:var(--muted)}
+.sep{color:var(--line)}
+.soonchip{font:600 9px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:2px 5px;margin-left:2px}
 .portfolio{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px 20px 20px;margin-bottom:28px}
 .ptiles{display:flex;flex-wrap:wrap;gap:14px 34px;margin:10px 0 16px}
 .ptile .plab{font:600 10px var(--sans);letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
@@ -176,8 +189,8 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 <!-- ============ HUB (property overview) ============ -->
 <div id="hub" class="shell hide">
   <div class="hubhead">
-    <div class="eyebrow">Charlie Palmer Collective &middot; End of Month Reporting</div>
-    <h1>Properties</h1>
+    <img class="cpclogo" src="cpc-logo.png" alt="Charlie Palmer Collective">
+    <h1 class="hubtitle">End of Month Reporting</h1>
     <div class="meta" id="hubmeta">&nbsp;</div>
   </div>
   <div id="portfolio" class="portfolio hide"></div>
@@ -464,26 +477,21 @@ function renderHub(){
   HUB_PROPERTIES.forEach(h => { if (!groups.includes(h.group)) groups.push(h.group); });
   let html = "";
   groups.forEach(g => {
-    html += `<div class="hubgroup"><div class="hubgroup-h">${esc(g)}</div><div class="hubgrid">`;
+    html += `<div class="hubgroup"><div class="hubgroup-h">${esc(g)}</div><div class="plist">`;
     HUB_PROPERTIES.filter(h => h.group === g).forEach(hp => {
       const live = (byProp[hp.name] || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
       if (live.length){
-        html += `<div class="pcard"><div class="pcard-h"><div class="pname">${esc(hp.name)}</div>` +
-          `<div class="pmeta">${live.length} outlet${live.length > 1 ? "s" : ""}</div></div>` +
-          live.map(o => `<button class="orow" data-prop="${esc(hp.name)}" data-outlet="${esc(o.outlet_id)}">` +
-            `<span><span class="oname">${esc(o.outlet_name)}</span>${o.concept ? `<span class="osub"> \u00b7 ${esc(o.concept)}</span>` : ""}</span>` +
-            `<span class="arrow">&rarr;</span></button>`).join("") + `</div>`;
+        const outs = live.map(o => `<button class="olink" data-prop="${esc(hp.name)}" data-outlet="${esc(o.outlet_id)}">${esc(o.outlet_name)}</button>`).join(`<span class="sep">&middot;</span>`);
+        html += `<div class="prow"><span class="pn">${esc(hp.name)}</span><span class="po">${outs}</span></div>`;
       } else {
-        const outs = hp.outlets || [];
-        html += `<div class="pcard soon"><div class="pcard-h"><div class="pname">${esc(hp.name)}</div>` +
-          `<div class="pmeta">Coming soon${outs.length ? "  \u00b7  " + outs.length + " outlet" + (outs.length > 1 ? "s" : "") : ""}</div></div>` +
-          outs.map(n => `<div class="orow static"><span class="oname">${esc(n)}</span></div>`).join("") + `</div>`;
+        const outs = (hp.outlets || []).map(n => `<span class="osoon">${esc(n)}</span>`).join(`<span class="sep">&middot;</span>`);
+        html += `<div class="prow soon"><span class="pn">${esc(hp.name)}</span><span class="po">${outs}<span class="soonchip">Soon</span></span></div>`;
       }
     });
     html += `</div></div>`;
   });
   $("hubbody").innerHTML = html;
-  $("hubbody").querySelectorAll(".orow[data-outlet]").forEach(b =>
+  $("hubbody").querySelectorAll(".olink[data-outlet]").forEach(b =>
     b.addEventListener("click", () => openProperty(b.dataset.prop, b.dataset.outlet, true)));
 }
 
