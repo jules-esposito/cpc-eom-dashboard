@@ -207,13 +207,14 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 
 <!-- ============ SIGN-IN GATE ============ -->
 <div id="gate" class="gate">
-  <div class="eyebrow">Appellation Hotels</div>
-  <h1>Operations Reporting</h1>
-  <p>Confidential. Sign in with your password, or request a one-time email link.</p>
-  <input id="email" type="email" placeholder="you@appellationhotels.com" autocomplete="email">
-  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-  <button id="pwbtn">Sign in</button>
-  <button class="ghost" id="send" style="margin-top:8px">Email me a sign-in link instead</button>
+  <div class="eyebrow">Charlie Palmer Collective</div>
+  <h1>End of Month Reporting</h1>
+  <p>Confidential. Enter the access password to view the reports.</p>
+  <input id="password" type="password" placeholder="Access password" autocomplete="current-password">
+  <button id="pwbtn">View reports</button>
+  <p style="margin:18px 0 0;font-size:12px;opacity:.6">Have your own named login? Enter your email, then your password or request a link.</p>
+  <input id="email" type="email" placeholder="you@appellationhotels.com  (optional)" autocomplete="email">
+  <button class="ghost" id="send" style="margin-top:8px">Email me a sign-in link</button>
   <div id="gmsg" class="msg"></div>
 </div>
 
@@ -388,11 +389,14 @@ $("send").addEventListener("click", async () => {
 });
 $("email").addEventListener("keydown", e => { if (e.key === "Enter") $("send").click(); });
 
+const SHARED_EMAIL = "cpcviewer@charliepalmer.com";
 $("pwbtn").addEventListener("click", async () => {
-  const email = $("email").value.trim().toLowerCase();
+  const typed = $("email").value.trim().toLowerCase();
   const password = $("password").value;
   const m = $("gmsg");
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !password) { m.className = "msg err"; m.textContent = "Enter your email and password."; return; }
+  if (!password) { m.className = "msg err"; m.textContent = "Enter the access password."; return; }
+  if (typed && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(typed)) { m.className = "msg err"; m.textContent = "That email doesn't look right \u2014 or leave it blank to use the shared password."; return; }
+  const email = typed || SHARED_EMAIL;   /* blank email => shared team access */
   m.className = "msg"; m.textContent = "Signing in\u2026";
   const { error } = await db.auth.signInWithPassword({ email, password });
   if (error) { m.className = "msg err"; m.textContent = error.message; }
