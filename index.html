@@ -31,8 +31,26 @@ select{font:400 14px var(--sans);padding:7px 30px 7px 11px;border:1px solid var(
   -webkit-appearance:none;appearance:none;color:var(--forest);cursor:pointer}
 select:focus{outline:2px solid var(--gold);outline-offset:-1px}
 .stamp{font-size:12px;color:var(--muted);margin-left:auto}
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:11px;background:var(--cream);border-bottom:1px solid var(--line);margin:0 -24px;padding:9px 24px}
+.tb-icon{background:none;border:1px solid var(--line);border-radius:6px;color:var(--olive);width:30px;height:30px;min-width:30px;padding:0;font-size:15px;line-height:1;cursor:pointer;letter-spacing:0;text-transform:none}
+.tb-icon:hover{color:var(--forest);background:#FBF8F2}
+.tb-logo{height:19px;width:auto}
+.tb-sel{padding:6px 26px 6px 10px;font-size:13px}
+.tb-flex{flex:1}
+.tb-print{padding:7px 13px;font-size:11px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--paper)}
+.seg button{font:600 12px var(--sans);letter-spacing:.02em;text-transform:none;padding:6px 15px;border:none;border-radius:0;background:none;color:var(--olive);cursor:pointer}
+.seg button.on{background:var(--forest);color:var(--cream)}
+.seg button:hover:not(.on){background:#FBF8F2;color:var(--forest)}
+.tile,.card,.olink,.orow,.backbtn,.seg button,.tb-icon,button{transition:background .12s ease,border-color .12s ease,color .12s ease,transform .12s ease}
+.skel{background:linear-gradient(90deg,#EFEAE0 25%,#F7F3EB 50%,#EFEAE0 75%);background-size:200% 100%;animation:shimmer 1.25s linear infinite;border-radius:4px}
+@keyframes shimmer{to{background-position:-200% 0}}
+.skel-line{height:12px;margin:9px 0}
+@keyframes pfade{from{opacity:.45}to{opacity:1}}
+.printhead{display:none}
+@media (max-width:820px){.tb-logo{display:none}.topbar{gap:8px;flex-wrap:wrap}}
 
-nav.sub{position:sticky;top:0;z-index:40;background:var(--cream);border-bottom:1px solid var(--line);
+nav.sub{position:sticky;top:49px;z-index:40;background:var(--cream);border-bottom:1px solid var(--line);
   margin:0 -24px;padding:0 24px}
 nav.sub ul{display:flex;gap:2px;list-style:none;margin:0;padding:0;overflow-x:auto;scrollbar-width:none}
 nav.sub ul::-webkit-scrollbar{display:none}
@@ -172,10 +190,16 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
   th.opt,td.opt{display:none}
 }
 @media print{
-  nav.sub,.pickers,button,.foot{display:none !important}
+  @page{margin:14mm}
+  .topbar,nav.sub,.foot,button{display:none !important}
+  .printhead{display:block;margin-bottom:16px;border-bottom:2px solid var(--forest);padding-bottom:12px}
+  .printhead .cpclogo{height:28px;margin-bottom:9px}
+  .printhead .ph-title{font:600 15px var(--sans);color:var(--forest)}
+  .printhead .ph-conf{font:600 9.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .mast{padding-top:0;border-bottom:none}
   body{background:#fff} .shell{max-width:none;padding:0}
-  section{page-break-inside:avoid;padding-top:22px}
-  .card,.tile{border-color:#bbb}
+  section{page-break-inside:avoid;padding-top:16px}
+  .card,.tile{border-color:#ccc}
 }
 </style>
 </head>
@@ -211,17 +235,27 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 <!-- ============ REPORT ============ -->
 <div id="app" class="shell hide">
 
+  <div class="topbar">
+    <button class="tb-icon" id="backhub" title="All properties">&larr;</button>
+    <img class="tb-logo" src="cpc-logo.png" alt="Charlie Palmer Collective">
+    <select id="outlet" class="tb-sel"></select>
+    <div class="seg" id="segMonth"></div>
+    <span class="tb-flex"></span>
+    <button class="ghost tb-print" id="btnPrint">Print / PDF</button>
+  </div>
+
+  <div class="printhead">
+    <img class="cpclogo" src="cpc-logo.png" alt="Charlie Palmer Collective">
+    <div class="ph-title" id="phTitle"></div>
+    <div class="ph-conf">Confidential &middot; Prepared for property ownership</div>
+  </div>
+
   <div class="mast">
-    <button class="backbtn" id="backhub">&larr; All properties</button>
     <div class="eyebrow">End of Month Operations Report</div>
     <h1 id="title">&nbsp;</h1>
     <div class="meta" id="submeta">&nbsp;</div>
-    <div class="pickers">
-      <select id="outlet"></select>
-      <select id="period"></select>
-      <button class="ghost" id="reload">Refresh</button>
-      <span class="stamp" id="stamp"></span>
-    </div>
+    <select id="period" style="display:none"></select>
+    <span id="stamp" style="display:none"></span>
   </div>
 
   <nav class="sub">
@@ -418,8 +452,8 @@ async function enter(){
     `<option value="${esc(p.period_id)}">${esc(p.label)}${p.status !== "published" ? " (draft)" : ""}</option>`).join("");
   $("outlet").addEventListener("change", load);
   $("period").addEventListener("change", load);
-  $("reload").addEventListener("click", load);
   $("backhub").addEventListener("click", () => showHub(true));
+  $("btnPrint").addEventListener("click", () => window.print());
   $("hubsignout").addEventListener("click", async () => { await db.auth.signOut(); location.reload(); });
   window.addEventListener("popstate", routeFromUrl);
   routeFromUrl();
@@ -517,14 +551,35 @@ function openProperty(prop, outletId, push){
   load();
 }
 
+function renderSegMonth(){
+  const cur = $("period").value;
+  $("segMonth").innerHTML = PERIODS.map(p =>
+    `<button class="${p.period_id === cur ? "on" : ""}" data-pid="${esc(p.period_id)}">${esc(p.label.replace(/\s*20\d\d/, ""))}</button>`).join("");
+  $("segMonth").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    if ($("period").value === b.dataset.pid) return;
+    $("period").value = b.dataset.pid; load();
+  }));
+}
+function showSkeletons(){
+  const line = (w) => `<div class="skel skel-line" style="width:${w}"></div>`;
+  $("tiles").innerHTML = Array.from({length:5}, () => `<div class="tile">${line("55%")}<div class="skel" style="height:26px;width:80%;margin:10px 0 6px"></div>${line("45%")}</div>`).join("");
+  $("pnlrows").innerHTML = Array.from({length:7}, () => `<tr><td colspan="5">${line("100%")}</td></tr>`).join("");
+  $("donut").innerHTML = `<div class="skel" style="width:150px;height:150px;border-radius:50%;margin:6px auto"></div>`; $("dlegend").innerHTML = "";
+  $("laborrows").innerHTML = Array.from({length:5}, () => `<tr><td colspan="6">${line("100%")}</td></tr>`).join("");
+  $("revlist").innerHTML = `<div style="padding:16px">${line("40%")}${line("70%")}${line("60%")}</div>`;
+  $("mixbody").innerHTML = `<div style="padding:16px">${[..."12345"].map(()=>line("100%")).join("")}</div>`;
+  $("notelist").innerHTML = `<div style="padding:16px">${line("88%")}${line("80%")}${line("84%")}</div>`;
+}
 async function load(){
   const oid = $("outlet").value, pid = $("period").value;
   const o = OUTLETS.find(x => x.outlet_id === oid) || {};
   const p = PERIODS.find(x => x.period_id === pid) || {};
-  $("title").textContent = (o.outlet_name || "") + " · " + (p.label || "");
-  $("submeta").textContent = [o.property, o.concept, o.pos_system ? o.pos_system + " POS" : null]
+  $("title").textContent = o.outlet_name || "";
+  $("submeta").textContent = [o.property, o.concept, o.pos_system ? o.pos_system + " POS" : null, p.label]
     .filter(Boolean).join("  ·  ");
-  $("stamp").textContent = "Loading…";
+  $("phTitle").textContent = [o.outlet_name, o.property, p.label].filter(Boolean).join("  ·  ");
+  renderSegMonth();
+  showSkeletons();
 
   const q = t => db.from(t).select("*").eq("outlet_id", oid).eq("period_id", pid);
   const [pnl, labor, revs, mix, notes, lg] = await Promise.all([
@@ -551,7 +606,7 @@ async function load(){
   $("loadinfo").textContent = L
     ? "Data loaded " + new Date(L.loaded_at).toLocaleString() + (L.source_summary ? " · " + L.source_summary : "")
     : "No load recorded for this period.";
-  $("stamp").textContent = "Viewed " + new Date().toLocaleTimeString();
+  document.querySelectorAll("#app section").forEach(el => { el.style.animation = "none"; void el.offsetWidth; el.style.animation = "pfade .26s ease"; });
 }
 
 /* ---------- renderers ---------- */
