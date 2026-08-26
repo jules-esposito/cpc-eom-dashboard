@@ -151,14 +151,20 @@ button.ghost{background:transparent;color:var(--olive);border-color:var(--line);
 .osoon{color:var(--muted)}
 .sep{color:var(--line)}
 .soonchip{font:600 9px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:2px 5px;margin-left:2px}
-.portfolio{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin-bottom:26px}
-.pline{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px 20px;font-size:13px}
-.peyebrow{font:600 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-right:2px}
-.pstat{white-space:nowrap}
-.psl{font:600 10px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.psv{font-weight:600;color:var(--forest);font-variant-numeric:tabular-nums}
-.ppct{font-size:11.5px;font-variant-numeric:tabular-nums}
-.pnote{font-size:10.5px;color:var(--muted);margin-top:8px}
+.portfolio{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px 20px;margin-bottom:26px}
+.peyebrow{display:block;font:600 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.ptwrap{overflow-x:auto;margin:0 -4px}
+.ptable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.ptable th{font:600 10px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:right;padding:4px 12px 10px;white-space:nowrap}
+.ptable th.pt-prop{text-align:left}
+.ptable td{padding:12px;text-align:right;font-size:14px;color:var(--forest);white-space:nowrap;border-top:1px solid rgba(0,0,0,.06)}
+.ptable td.pt-prop{text-align:left;font-weight:600;color:var(--forest)}
+.ptable tbody tr:first-child td{border-top:1px solid var(--line)}
+.ptable tr.pt-prop-row{cursor:pointer}
+.ptable tr.pt-prop-row:hover td{background:rgba(191,152,80,.08)}
+.ptable td.fav{color:var(--fav)} .ptable td.unfav{color:var(--unfav)}
+.ptable .pt-total td{border-top:2px solid var(--line);font-weight:700}
+.pnote{font-size:10.5px;color:var(--muted);margin-top:10px}
 .ptiles{display:flex;flex-wrap:wrap;gap:14px 34px;margin:10px 0 16px}
 .ptile .plab{font:600 10px var(--sans);letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
 .ptile .pval{font:500 30px/1.1 var(--serif);color:var(--forest);font-variant-numeric:tabular-nums;margin:5px 0 2px}
@@ -441,15 +447,20 @@ async function enter(){
   $("hubwho").textContent = "Signed in as " + (SESSION.user.email || "");
   const _latestPid = PERIODS.length ? PERIODS[PERIODS.length - 1].period_id : null;
   const _WANT = ["Total Revenue","Food Revenue","Beverage Revenue","Total Labor","Department Profit"];
-  PORTFOLIO = { period: _latestPid, lines: {}, byOutlet: {} };
+  const _outletProp = {}; OUTLETS.forEach(o => { _outletProp[o.outlet_id] = o.property || "Other"; });
+  const _propOrder = [];
+  OUTLETS.slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0))
+    .forEach(o => { const p = o.property || "Other"; if (!_propOrder.includes(p)) _propOrder.push(p); });
+  PORTFOLIO = { period: _latestPid, metrics: _WANT, order: _propOrder, props: {} };
   if (_latestPid){
     const { data: _pr } = await db.from("pnl_lines").select("outlet_id,line_item,section,actual,budget")
       .eq("period_id", _latestPid).in("line_item", _WANT);
     (_pr || []).forEach(r => {
-      const L = PORTFOLIO.lines[r.line_item] || (PORTFOLIO.lines[r.line_item] = { section: r.section, actual: 0, budget: 0, hasBudget: false });
+      const prop = _outletProp[r.outlet_id] || "Other";
+      const P = PORTFOLIO.props[prop] || (PORTFOLIO.props[prop] = {});
+      const L = P[r.line_item] || (P[r.line_item] = { section: r.section, actual: 0, budget: 0, hasBudget: false });
       L.actual += Number(r.actual) || 0;
       if (r.budget != null){ L.budget += Number(r.budget); L.hasBudget = true; }
-      if (r.line_item === "Total Revenue") PORTFOLIO.byOutlet[r.outlet_id] = { rev: Number(r.actual) || 0 };
     });
   }
   $("period").innerHTML = PERIODS.map(p =>
@@ -481,29 +492,40 @@ function showHub(push){
 
 function renderPortfolio(){
   const el = $("portfolio");
-  if (!PORTFOLIO || !PORTFOLIO.period || !PORTFOLIO.lines || !PORTFOLIO.lines["Total Revenue"]){ el.classList.add("hide"); return; }
+  const props = (PORTFOLIO && PORTFOLIO.props) ? PORTFOLIO.props : {};
+  const rows = (PORTFOLIO && PORTFOLIO.order ? PORTFOLIO.order : Object.keys(props))
+    .filter(p => props[p] && props[p]["Total Revenue"]);
+  if (!PORTFOLIO || !PORTFOLIO.period || !rows.length){ el.classList.add("hide"); return; }
   el.classList.remove("hide");
   const per = PERIODS.find(p => p.period_id === PORTFOLIO.period);
   const perLabel = per ? per.label : PORTFOLIO.period;
-  const stat = (label, li, showPct) => {
-    const L = PORTFOLIO.lines[li]; if (!L) return "";
+  const METS = PORTFOLIO.metrics;
+  const cell = (L) => {
+    if (!L) return `<td>&mdash;</td>`;
     const bud = L.hasBudget ? L.budget : null;
-    const d = bud != null ? L.actual - bud : null;
-    const pct = (d != null && bud) ? d / Math.abs(bud) * 100 : null;
-    const cls = favClass(L.section, L.actual, bud);
-    return `<span class="pstat"><span class="psl">${esc(label)}</span> <span class="psv">${money(L.actual)}</span>` +
-      (showPct && pct != null ? ` <span class="ppct ${cls}">${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%</span>` : "") + `</span>`;
+    return `<td class="${favClass(L.section, L.actual, bud)}">${money(L.actual)}</td>`;
   };
+  // grand totals across properties
+  const tot = {};
+  rows.forEach(p => METS.forEach(m => {
+    const L = props[p][m]; if (!L) return;
+    const T = tot[m] || (tot[m] = { section: L.section, actual: 0, budget: 0, hasBudget: false });
+    T.actual += L.actual;
+    if (L.hasBudget){ T.budget += L.budget; T.hasBudget = true; }
+  }));
+  const head = `<tr><th class="pt-prop">Property</th><th>Net Sales</th><th>Food Rev.</th>` +
+    `<th>Beverage Rev.</th><th>Labor</th><th>Dept Profit*</th></tr>`;
+  const body = rows.map(p =>
+    `<tr class="pt-prop-row" data-prop="${esc(p)}"><td class="pt-prop">${esc(p)}</td>` +
+    METS.map(m => cell(props[p][m])).join("") + `</tr>`).join("");
+  const totRow = `<tr class="pt-total"><td class="pt-prop">Portfolio Total</td>` +
+    METS.map(m => cell(tot[m])).join("") + `</tr>`;
   el.innerHTML =
-    `<div class="pline">` +
-      `<span class="peyebrow">Portfolio at a glance &middot; ${esc(perLabel)}</span>` +
-      stat("Net Sales", "Total Revenue", true) +
-      stat("Food", "Food Revenue", false) +
-      stat("Beverage", "Beverage Revenue", false) +
-      stat("Labor", "Total Labor", true) +
-      stat("Dept Profit*", "Department Profit", true) +
-    `</div>` +
-    `<div class="pnote">*Department Profit blends AperiBar's Gross Operating Income with the Paso outlets' still-overstated department profit.</div>`;
+    `<span class="peyebrow">Portfolio at a glance &middot; ${esc(perLabel)}</span>` +
+    `<div class="ptwrap"><table class="ptable"><thead>${head}</thead><tbody>${body}${totRow}</tbody></table></div>` +
+    `<div class="pnote">*Department Profit blends AperiBar's Gross Operating Income with the Paso outlets' still-overstated department profit. Click a property to open its report.</div>`;
+  el.querySelectorAll(".pt-prop-row").forEach(tr =>
+    tr.addEventListener("click", () => openProperty(tr.dataset.prop, null, true)));
 }
 
 function renderHub(){
